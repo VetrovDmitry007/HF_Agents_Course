@@ -1,6 +1,6 @@
 # Ваш агент, которого зовут Альфред
 
-# pip install 'smolagents[litellm]
+# pip install 'smolagents[litellm]'
 # pip install boto3
 
 from smolagents import LiteLLMModel, GradioUI, CodeAgent, DuckDuckGoSearchTool, FinalAnswerTool, InferenceClientModel, load_tool, tool

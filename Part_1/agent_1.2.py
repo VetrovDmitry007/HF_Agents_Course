@@ -1,8 +1,12 @@
+# Использование моделей провайдера OpenRouter
+import os
 from typing import Dict, Any
-from smolagents import CodeAgent, LiteLLMModel, tool
+from smolagents import CodeAgent, LiteLLMModel, tool, OpenAIModel
 
-from Learn_1.prompt_2 import agent_instructions
+from Learn_1.prompt_1 import agent_instructions
+from dotenv import load_dotenv
 
+load_dotenv()
 
 @tool
 def find_city_coordinates(city: str) -> Dict[str, Any]:
@@ -108,12 +112,13 @@ def get_weather_by_coordinates(
     }
 
 
-model = LiteLLMModel(
-    model_id="ollama_chat/qwen2:7b",
-    api_base="http://192.168.3.88:11434",
-    num_ctx=8192,
+model = OpenAIModel(
+    # model_id="deepseek/deepseek-v3.2", # 17-66 сек.
+    # model_id="poolside/laguna-m.1:free", # 49 сек.
+    model_id="deepseek/deepseek-v4-flash:free", # 17.65 сек.
+    api_base="https://openrouter.ai/api/v1",
+    api_key=os.environ['OR_TOKEN'],
 )
-
 
 agent = CodeAgent(
     tools=[
