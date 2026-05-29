@@ -4,8 +4,21 @@
 pip install "smolagents[mcp]"
 pip install uv
 
-uvx — это команда из пакетного менеджера uv.
-Она запускает Python CLI-инструменты во временном изолированном окружении.
+Порядок работы
+------------
+Подключись к MCP-серверу pubmedmcp,
+загрузи его инструменты,
+преврати их в smolagents Tool,
+положи их в tool_collection.tools,
+и держи соединение открытым, пока агент работает.
+
+pubmedmcp -- Сервер MCP, который позволяет искать и получать статьи из PubMed.
+https://pypi.org/project/pubmedmcp/?utm_source=chatgpt.com
+
+StdioServerParameters — это объект настройки(конфигурации) запуска MCP-сервера через stdio
+uvx — Это команда из пакетного менеджера uv.
+      Она запускает Python CLI-инструменты во временном изолированном окружении.
+ToolCollection.from_mcp() -- подключается к MCP-серверу, загружает из него инструменты и передаёт их агенту.
 
 """
 
@@ -29,8 +42,8 @@ uvx_path = Path(sys.executable).with_name("uvx.exe")
 
 server_parameters = StdioServerParameters(
     command=str(uvx_path),
-    # args=["--quiet", "pubmedmcp@0.1.3"],
-    args=["pubmedmcp@0.1.3"],
+    args=["--quiet", "pubmedmcp@0.1.3"],
+    # args=["pubmedmcp@0.1.3"],
     env={
         **os.environ,
         "UV_PYTHON": "3.12",
@@ -38,7 +51,8 @@ server_parameters = StdioServerParameters(
     },
 )
 
-with ToolCollection.from_mcp(server_parameters, trust_remote_code=True, structured_output=False,) as tool_collection:
+# ToolCollection.from_mcp() -- подключается к MCP-серверу, загружает из него инструменты и передаёт их агенту.
+with ToolCollection.from_mcp(server_parameters, trust_remote_code=True, structured_output=False, ) as tool_collection:
     agent = CodeAgent(
         tools=[*tool_collection.tools],
         model=model,

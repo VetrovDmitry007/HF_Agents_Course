@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from smolagents import CodeAgent, LiteLLMModel, tool
 
-from Learn_1.prompt_1 import agent_instructions
+from prompt_1 import agent_instructions
 
 
 @tool
