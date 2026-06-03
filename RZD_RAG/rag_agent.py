@@ -1,5 +1,5 @@
 """
-trainbot_rag_agent.py
+rag_agent.py
 
 RAG-агент для TrainBot на базе smolagents.
 
@@ -284,14 +284,14 @@ class RetrieverFAQ(Tool):
 
             result_parts.append(
                 f"""
-===== Фрагмент {index} =====
-source: {source}
-qa_id: {qa_id}
-chunk_id: {chunk_id}
-score: {score}
-
-{doc.page_content}
-""".strip()
+                ===== Фрагмент {index} =====
+                source: {source}
+                qa_id: {qa_id}
+                chunk_id: {chunk_id}
+                score: {score}
+                
+                {doc.page_content}
+                """.strip()
             )
 
         return "\n\n".join(result_parts)
@@ -350,8 +350,8 @@ if __name__ == "__main__":
     # чтобы принудительно создать FAISS-индекс из JSON.
     agent = build_trainbot_agent(rebuild_index=False)
 
-    # question = "Как вывести деньги со счёта TrainBot?"
-    question = "Почему я не вижу список пассажиров в боте?"
+    question = "Как вывести деньги со счёта TrainBot?"
+    # question = "Почему я не вижу список пассажиров в боте?"
 
     answer_msg = agent.run(question)
 
