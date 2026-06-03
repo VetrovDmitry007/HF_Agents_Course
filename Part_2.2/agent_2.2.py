@@ -49,6 +49,11 @@ vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 
 # 2. Разбивка и преобразование документов в эмбэддинги
 if chroma_collection.count() == 0:
+
+    # 3. Загрузка документов
+    reader = SimpleDirectoryReader(input_dir="./data/qa")
+    documents = reader.load_data()
+
     pipeline = IngestionPipeline(
         transformations=[
             SentenceSplitter(
@@ -59,11 +64,7 @@ if chroma_collection.count() == 0:
         ],
         vector_store=vector_store,
     )
-
-    # 3. Загрузка документов
-    reader = SimpleDirectoryReader(input_dir="./data/qa")
-    documents = reader.load_data()
-    # выполняет весь ingestion-процесс и записывает результат в vector_store
+    # Выполняет весь ingestion-процесс и записывает результат в vector_store
     nodes = pipeline.run(documents=documents)
 
     print("Документов загружено:", len(documents))
