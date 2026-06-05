@@ -1,9 +1,9 @@
 """
-Создание RAG-агента с одним retriever-инструментом, построенный по схеме FunctionTool → ReActAgent → AgentWorkflow.
+Создание RAG-агента с одним retriever-инструментом.
 https://huggingface.co/learn/agents-course/unit2/llama-index/agents#creating-rag-agents-with-queryenginetools
 
 При использовании retriever-инструмента генерацию ответа обычно выполняет только агент:
-Agent LLM → index.as_retriever() → Retriever → Agent LLM
+Agent LLM → index.as_retriever() → RetrieverTool → Agent LLM
 
 Это подходит, когда агент должен:
 

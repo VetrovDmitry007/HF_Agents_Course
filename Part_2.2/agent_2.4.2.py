@@ -1,12 +1,12 @@
 """
-Создание RAG-агента с одним retriever-инструментом, построенный по схеме QueryEngineTool → ReActAgent → AgentWorkflow.
+Создание RAG-агента с одним retriever-инструментом
 https://huggingface.co/learn/agents-course/unit2/llama-index/agents#creating-rag-agents-with-queryenginetools
 
 При использовании QueryEngineTool может появиться дополнительная генерация внутри query engine:
 Agent LLM → index.as_query_engine() LLM → QueryEngineTool → Agent LLM
 
-Если return_direct=False, агент может переписать ответ query engine или вызвать другой инструмент.
-Если установить return_direct=True, ответ query engine будет возвращён напрямую, а цикл агента завершится.
+Если return_direct=False, агент может переписать ответ query_engine или вызвать другой инструмент.
+Если установить return_direct=True, ответ query_engine будет возвращён напрямую, а цикл агента завершится.
 -------------------------
 
 Агентность минимальная, потому что:
