@@ -1,5 +1,5 @@
+import os
 from typing import Any
-
 from llama_index.core.agent.workflow import ReActAgent, ToolCallResult
 from llama_index.core.evaluation import FaithfulnessEvaluator, RelevancyEvaluator
 from llama_index.core.workflow import (
@@ -9,6 +9,8 @@ from llama_index.core.workflow import (
     Workflow,
     step,
 )
+
+from RZD_RAG_2.verified_answer_memory import VerifiedAnswerMemory
 
 
 class RunAgentEvent(Event):
@@ -44,26 +46,43 @@ class FaithfulRAGWorkflow(Workflow):
     def __init__(
             self,
             agent: ReActAgent,
+            vam: VerifiedAnswerMemory,
             evaluator_llm: Any,
             max_retries: int = 2,
             **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
 
+        self.evaluator_llm=evaluator_llm
+        self.vam = vam
         self.agent = agent
         self.max_retries = max_retries
-        self.faithfulness_evaluator = FaithfulnessEvaluator(llm=evaluator_llm)
-        self.relevance_evaluator = RelevancyEvaluator(llm=evaluator_llm)
+        self.faithfulness_evaluator = FaithfulnessEvaluator(llm=self.evaluator_llm)
+        self.relevance_evaluator = RelevancyEvaluator(llm=self.evaluator_llm)
 
     @step
-    async def start(self, ev: StartEvent) -> RunAgentEvent:
+    async def start(self, ev: StartEvent) -> StopEvent | RunAgentEvent:
         """Преобразует входной запрос в событие запуска агента."""
 
         print(f'Step start, {ev=}')
-        return RunAgentEvent(
-            query=ev.query,
-            attempt=0,
-        )
+
+        cached_answer = self.vam.get_best_answer(query=ev.query, max_distance=0.15)
+        if cached_answer is not None:
+            self.vam.mark_used(cached_answer["id"])
+
+        if cached_answer is not None:
+            return StopEvent(
+                result={
+                    "answer": cached_answer["answer"],
+                    "status": "cached",
+                    "cache_hit": True,
+                    "matched_query": cached_answer["query"],
+                    "distance": cached_answer["distance"],
+                    "source": "verified_answer_memory",
+                }
+            )
+
+        return RunAgentEvent(query=ev.query, attempt=0)
 
     @step
     async def run_agent(self, ev: RunAgentEvent) -> AgentAnswerEvent:
@@ -187,6 +206,10 @@ class FaithfulRAGWorkflow(Workflow):
                 print(f"Результат проверки FaithfulnessEvaluator: {fh_passed=}, {fh_score=}")
 
         if rl_passed and fh_passed:
+            self.vam.save_answer(query=ev.query,
+                                 answer=ev.answer,
+                                 relevance_score=rl_score,
+                                 faithfulness_score=fh_score)
             return StopEvent(
                 result={
                     "answer": ev.answer,
@@ -194,8 +217,9 @@ class FaithfulRAGWorkflow(Workflow):
                     "relevance_score": rl_score,
                     "attempts": ev.attempt + 1,
                     "status": "passed",
-                }
-            )
+                    "cache_hit": False,
+                    }
+                )
 
         if fh_checked and (not fh_feedback or fh_feedback.strip().upper() in {"NO", "NO."}):
             fh_feedback = (
@@ -246,8 +270,8 @@ class FaithfulRAGWorkflow(Workflow):
         return RetryAgentEvent(
             query=ev.query,
             attempt=ev.attempt + 1,
-            evaluator_feedback=fh_feedback,
-            relevance_feedback=rl_feedback,
+            evaluator_feedback="" if fh_passed else fh_feedback,
+            relevance_feedback="" if rl_passed else rl_feedback,
         )
 
     @step

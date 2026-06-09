@@ -14,25 +14,36 @@ ReActAgent, который всегда обращается к главному
 """
 
 import asyncio
-import os
 from pathlib import Path
-
 import chromadb
 from llama_index.core import VectorStoreIndex
 from llama_index.core.agent import ReActAgent
 from llama_index.core.query_engine import RouterQueryEngine
 from llama_index.core.selectors import LLMSingleSelector
 from llama_index.core.tools import QueryEngineTool
-from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from dotenv import load_dotenv
 
-from RZD_RAG_2.rag_workflows import FaithfulRAGWorkflow
+from RZD_RAG_2.fallback_llm import FallbackHuggingFaceLLM
+from rag_workflows import FaithfulRAGWorkflow
+from verified_answer_memory import VerifiedAnswerMemory
 
 load_dotenv()
 
-hf_token = os.getenv("HF_TOKEN")
+# hf_token = os.getenv("HF_TOKEN")
+
+TOKEN_ENVS = [
+    "HF_TOKEN_0",
+    "HF_TOKEN",
+    "HF_TOKEN_2",
+    "HF_TOKEN_0",
+    "HF_TOKEN",
+    "HF_TOKEN_2",
+    "HF_TOKEN_0",
+    "HF_TOKEN",
+    "HF_TOKEN_2",
+    ]
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EMBEDDINGS_DIR = PROJECT_ROOT / "models" / "embeddings"
@@ -41,6 +52,8 @@ EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12
 embed_model = HuggingFaceEmbedding(model_name=EMBEDDING_MODEL_NAME,
                                    cache_folder=EMBEDDINGS_DIR,
                                    )
+
+vam = VerifiedAnswerMemory(embed_model=embed_model)
 
 db = chromadb.PersistentClient(path="./trainbot_chroma_db")
 chroma_collection = db.get_or_create_collection("trainbot")
@@ -53,26 +66,35 @@ vector_store_pdf = ChromaVectorStore(chroma_collection=chroma_collection_pdf)
 index_pdf = VectorStoreIndex.from_vector_store(vector_store_pdf, embed_model=embed_model)
 
 
-selector_llm = HuggingFaceInferenceAPI(
+selector_llm = FallbackHuggingFaceLLM(
+    token_envs=TOKEN_ENVS,
     model_name="Qwen/Qwen2.5-Coder-32B-Instruct",
     temperature=0.1,
     max_tokens=128,
-    token=hf_token,
     provider="auto",
 )
 
-answer_llm = HuggingFaceInferenceAPI(
+answer_llm = FallbackHuggingFaceLLM(
+    token_envs=TOKEN_ENVS,
     model_name="Qwen/Qwen2.5-Coder-32B-Instruct",
     temperature=0.1,
-    max_tokens=900,
-    token=hf_token,
+    max_tokens=450,
     provider="auto",
 )
 
-# Интерфейс поиска со стратегией обработки ответа "tree_summarize"
+evaluator_llm = FallbackHuggingFaceLLM(
+    token_envs=TOKEN_ENVS,
+    model_name="Qwen/Qwen2.5-Coder-32B-Instruct",
+    temperature=0.01,
+    max_tokens=128,
+    provider="auto",
+)
+
+
+# Интерфейс поиска со стратегией обработки ответа "compact"
 query_engine = index.as_query_engine(llm=answer_llm,
-                                     similarity_top_k=5,
-                                     response_mode="tree_summarize")
+                                     similarity_top_k=3,
+                                     response_mode="compact")
 
 query_engine_pdf = index_pdf.as_query_engine(llm=answer_llm,
                                              similarity_top_k=3,
@@ -137,33 +159,16 @@ system_prompt = """
         Ты — RAG-ассистент поддержки TrainBot.
 
         Правила:
-        1. Перед ответом на вопрос о TrainBot всегда используй инструмент main_engine_tool.
-        2. При вызове main_engine_tool НЕ сокращай вопрос до 2-3 общих слов.
-        3. В поисковый запрос передавай:
-           - исходный вопрос пользователя полностью;
-           - затем добавь 3-7 ключевых слов по смыслу.
-        4. Пример плохого запроса: "список пассажиров бот".
-        5. Пример хорошего запроса:
-           "Почему я не вижу список пассажиров в боте? не отображается список пассажиров аккаунт РЖД тест аккаунта обновить"
-        6. Отвечай только на основе найденных фрагментов базы знаний.
-        7. Если найденные фрагменты не содержат ответа, честно скажи:
-           "В базе знаний TrainBot нет точной информации по этому вопросу."
-        8. Не выдумывай тарифы, статусы подписок, правила РЖД, сроки возврата и технические детали.
-        9. Отвечай на русском языке.
-        10. Для пользовательской поддержки формулируй ответ вежливо и кратко.
-        11. Если для решения проблемы нужен ID пользователя, попроси указать ID и объясни,
-            где его найти: меню бота «Инфо.» → «Тарифы» → «ID».
-        12. Если ответ содержит пошаговую инструкцию, дай её кратко: обычно 3–5 пунктов.
-        13. Не обрывай ответ на середине предложения. Лучше дай более короткий, но завершённый ответ.
-        14. Не смешивай инструкции из разных разделов в одном ответе.
-        15. Не добавляй общие рекомендации вроде «обратитесь в поддержку», если в найденном контексте есть конкретная инструкция.
-        16. Если в источнике несколько близких шагов, объединяй их без потери смысла.
-        17. Не расписывай очевидные подшаги отдельно, если их можно объединить.
-        18. Не составляй список "возможных причин", если эти причины прямо не перечислены в найденных фрагментах.
-        19. Если пользователь описывает проблему, а в источнике есть только близкая инструкция или FAQ,
-            отвечай осторожно: "В найденных материалах указано..." вместо уверенного утверждения.
-        20. Если источник говорит "укажите логин/ID для проверки", обязательно попроси пользователя прислать ID или логин,
-            а не придумывай техническую причину проблемы.    
+        1. Всегда используй main_engine_tool для вопросов о TrainBot.
+        2. В инструмент передавай полный вопрос пользователя и 3–7 ключевых слов.
+        3. Отвечай только по найденным фрагментам.
+        4. Если точной информации нет, скажи: «В базе знаний TrainBot нет точной информации по этому вопросу».
+        5. Не выдумывай тарифы, правила РЖД, статусы подписок, сроки возврата и технические детали.
+        6. Если нужен ID пользователя, попроси ID и укажи путь: «Инфо.» → «Тарифы» → «ID».
+        7. Отвечай кратко, вежливо, на русском языке.
+        8. Не смешивай инструкции из разных разделов.
+        9. Если источник содержит только близкую инструкцию, пиши: «В найденных материалах указано...».
+        10. Не обрывай ответ на середине предложения. 
         """
 
 rag_agent = ReActAgent(
@@ -177,7 +182,8 @@ rag_agent = ReActAgent(
 
 workflow = FaithfulRAGWorkflow(
     agent=rag_agent,
-    evaluator_llm=answer_llm,
+    vam=vam,
+    evaluator_llm=evaluator_llm,
     max_retries=2,
     timeout=120,
 )
@@ -186,6 +192,7 @@ workflow = FaithfulRAGWorkflow(
 async def run_workflow():
     result = await workflow.run(
         # query="Как вернуть денежные средства со счёта TrainBot?"
+        # query="Как мне получит назад деньги"
         query="Почему не видно списка пассажиров."
     )
     print(result)
