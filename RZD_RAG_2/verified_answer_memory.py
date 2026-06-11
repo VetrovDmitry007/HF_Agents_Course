@@ -112,17 +112,17 @@ class VerifiedAnswerMemory:
         return self.embed_model.get_text_embedding(text)
 
     def save_answer(
-            self,
-            query: str,
-            answer: str,
-            relevance_score: float | None = None,
-            faithfulness_score: float | None = None,
-    ) -> str:
+                    self,
+                    query: str,
+                    answer: str,
+                    relevance_score: float | None = None,
+                    faithfulness_score: float | None = None,
+                    ) -> str:
         """  Сохраняет проверенный ответ.
 
         Args:
             query:
-                Исходный вопрос пользователя.
+                Вопрос пользователя.
 
             answer:
                 Ответ агента, который прошёл проверки.
@@ -155,7 +155,7 @@ class VerifiedAnswerMemory:
             documents=[query],
             embeddings=[embedding],
             metadatas=[metadata],
-        )
+            )
 
         return answer_id
 
@@ -353,7 +353,9 @@ def debug_vam():
                                        cache_folder=EMBEDDINGS_DIR
                                        )
 
-    vam = VerifiedAnswerMemory(embed_model=embed_model)
+    vam = VerifiedAnswerMemory(persist_dir=PROJECT_ROOT / "answer_memory_chroma_db",
+                               embed_model=embed_model)
+    vam.create_empty_storage(recreate=True)
     vam.print_storage_contents()
 
 
