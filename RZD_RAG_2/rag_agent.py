@@ -407,8 +407,6 @@ def initialize_components() -> FaithfulRAGWorkflow:
     return workflow
 
 
-workflow = initialize_components()
-
 
 async def run_workflow(active_workflow: FaithfulRAGWorkflow | None = None) -> None:
     """
@@ -439,4 +437,5 @@ async def run_workflow(active_workflow: FaithfulRAGWorkflow | None = None) -> No
 
 
 if __name__ == '__main__':
-    asyncio.run(run_workflow())
+    workflow = initialize_components()
+    asyncio.run(run_workflow(workflow))
