@@ -26,8 +26,8 @@ os.environ["OPENROUTER_API_KEY"] = os.getenv("OR_TOKEN")
 # 1.1 Загрузка модели
 
 """
-Время выполнения span classify:  2.4662296772003174
-Время выполнения draft response:  2.0163004398345947
+Время выполнения span_classify:  1.6038610935211182
+Время выполнения draft response:  1.510807991027832
 """
 # model = ChatOpenRouter(
 #     model="openai/gpt-4o-mini",
@@ -39,13 +39,23 @@ os.environ["OPENROUTER_API_KEY"] = os.getenv("OR_TOKEN")
 Время выполнения span classify:  24.22611427307129
 Время выполнения draft response:  27.50546622276306
 """
+# model = ChatOllama(
+#     model="qwen2.5:7b",
+#     base_url="http://188.116.172.185:11434",
+#     temperature=0.1,
+#     num_predict=800,
+# )
+
+"""
+Время выполнения span_classify:  2.201591968536377
+Время выполнения draft response:  2.5656380653381348
+"""
 model = ChatOllama(
-    model="qwen2.5:7b",
-    base_url="http://188.116.172.185:11434",
+    model="gpt-oss:20b",
+    base_url="http://192.168.3.154:11434",
     temperature=0.1,
     num_predict=800,
 )
-
 
 # 1.2 Объявление состояния
 class EmailState(TypedDict):
@@ -82,7 +92,8 @@ def classify_email(state: EmailState):
 
     prompt_system = (
         "Ты секретарь, твоя задача обрабатывать письма и определять спам в них. Письма со спамом маркируй как spam. "
-        "Законные письма помечай как ham. После параметра 'reason:' укажи почему оно помечено как спам.")
+        "Законные письма помечай как ham. После параметра 'reason:' укажи почему оно помечено как спам."
+        " Пиши по русски.")
 
     prompt_message = f"""Проанализируйте это письмо и определите, является ли оно спамом или законным.
 

@@ -20,7 +20,8 @@ from llama_index.core.workflow import Context
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
-from config_models.open_router import answer_llm, selector_llm, normalizer_llm, evaluator_llm
+from config_models.ollama import answer_llm, selector_llm, normalizer_llm, evaluator_llm
+# from config_models.open_router import answer_llm, selector_llm, normalizer_llm, evaluator_llm
 # from config_models.groq import answer_llm, selector_llm, normalizer_llm, evaluator_llm
 # from config_models.hf import answer_llm, selector_llm, normalizer_llm, evaluator_llm
 
@@ -423,7 +424,7 @@ async def run_workflow(active_workflow: FaithfulRAGWorkflow | None = None) -> No
         # query="Как вернуть деньги со счёта TrainBot?"
         # query="Как мне получит назад деньги"
         # query="Оплатил 1000 чтоб пополнить баланс. А баланс не пополняется."
-        # query="Почему не видно списка пассажиров."
+        query="Почему не видно списка пассажиров."
         # query="""Добрый день. Я вчера поставил подписку на бронирование, бот прислал уведомление,
         #            что места есть, но бронь не появилась. Деньги списались. Как мне теперь вернуть остаток?
         #         """
@@ -431,7 +432,7 @@ async def run_workflow(active_workflow: FaithfulRAGWorkflow | None = None) -> No
         #         Добрый день! Создал подписку, исправно выдает сообщения: 2026-07-19 16:35
         #         Керчь - Москва 464С: 249->242 мест. Но не бронирует! В чем дело?!
         #         """
-        query='Почему не бронируется билеты'
+        # query='Почему не бронируется билеты'
         )
     print(result)
 
