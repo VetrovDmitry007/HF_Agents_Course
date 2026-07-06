@@ -20,8 +20,8 @@ from llama_index.core.workflow import Context
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
-from config_models.ollama import answer_llm, selector_llm, normalizer_llm, evaluator_llm
-# from config_models.open_router import answer_llm, selector_llm, normalizer_llm, evaluator_llm
+# from config_models.ollama import answer_llm, selector_llm, normalizer_llm, evaluator_llm
+from config_models.open_router import answer_llm, selector_llm, normalizer_llm, evaluator_llm
 # from config_models.groq import answer_llm, selector_llm, normalizer_llm, evaluator_llm
 # from config_models.hf import answer_llm, selector_llm, normalizer_llm, evaluator_llm
 
