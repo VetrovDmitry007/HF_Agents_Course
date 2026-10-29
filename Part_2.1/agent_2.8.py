@@ -15,15 +15,15 @@ for key in [
 ]:
     os.environ.pop(key, None)
 
-os.environ["NO_PROXY"] = "188.116.172.185,localhost,127.0.0.1"
-os.environ["no_proxy"] = "188.116.172.185,localhost,127.0.0.1"
-
 from typing import Any
 from smolagents import CodeAgent, ToolCallingAgent, tool, OpenAIModel, DuckDuckGoSearchTool, VisitWebpageTool
 from dotenv import load_dotenv
 
 load_dotenv()
 
+MY_IP = os.environ["OLLAMA_IP"]
+os.environ["NO_PROXY"] = f"{MY_IP},localhost,127.0.0.1"
+os.environ["no_proxy"] = f"{MY_IP},localhost,127.0.0.1"
 
 @tool
 def edisclosure_search(query: str, max_results: int = 5) -> str:
@@ -277,7 +277,7 @@ def check_bond_report_quality(final_answer: Any, agent_memory: Any = None, agent
 
 model = OpenAIModel(
     model_id="qwen2.5:7b",
-    api_base="http://188.116.172.185:11434/v1",
+    api_base=f"http://{MY_IP}:11434/v1",
     api_key="ollama",
     temperature=0.1,
     max_tokens=800,

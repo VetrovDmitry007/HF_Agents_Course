@@ -19,18 +19,16 @@ for key in [
 ]:
     os.environ.pop(key, None)
 
-os.environ["NO_PROXY"] = "188.116.172.185,localhost,127.0.0.1"
-os.environ["no_proxy"] = "188.116.172.185,localhost,127.0.0.1"
-
 import re
-from smolagents import tool, ToolCallingAgent, LiteLLMModel, OpenAIModel
+from smolagents import tool, ToolCallingAgent, LiteLLMModel
+from smolagents import CodeAgent, OpenAIModel
 from dotenv import load_dotenv
 
 load_dotenv()
 
-
-import re
-from smolagents import CodeAgent, OpenAIModel, tool
+MY_IP = os.environ["OLLAMA_IP"]
+os.environ["NO_PROXY"] = f"{MY_IP},localhost,127.0.0.1"
+os.environ["no_proxy"] = f"{MY_IP},localhost,127.0.0.1"
 
 
 PRODUCT_DOCS = [
@@ -129,7 +127,7 @@ def search_engineering_docs(query: str) -> str:
 
 model = OpenAIModel(
     model_id="qwen2.5:7b",
-    api_base="http://188.116.172.185:11434/v1",
+    api_base=f"http://{MY_IP}:11434/v1",
     api_key="ollama",
     temperature=0.0,
     max_tokens=500,

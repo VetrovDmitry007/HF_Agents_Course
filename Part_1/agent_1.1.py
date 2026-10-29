@@ -1,7 +1,12 @@
+import os
 from typing import Dict, Any
 from smolagents import CodeAgent, LiteLLMModel, tool
+from dotenv import load_dotenv
 
 from prompt_1 import agent_instructions
+
+load_dotenv()
+OLLAMA_IP = os.environ["OLLAMA_IP"]
 
 
 @tool
@@ -110,8 +115,7 @@ def get_weather_by_coordinates(
 
 model = LiteLLMModel(
     model_id="ollama_chat/qwen2:7b",
-    # api_base="http://192.168.3.88:11434",
-    api_base="http://188.116.172.185:11434",
+    api_base=f"http://{OLLAMA_IP}:11434",
     num_ctx=8192,
 )
 

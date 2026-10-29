@@ -69,6 +69,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 os.environ["OPENROUTER_API_KEY"] = os.getenv("OR_TOKEN")
+OLLAMA_IP = os.environ["OLLAMA_IP"]
 
 # 1.1 Загрузка модели
 
@@ -92,7 +93,7 @@ def init_llm():
 
     # llm  = ChatOllama(
     #     model="qwen2.5:7b",
-    #     base_url="http://188.116.172.185:11434",
+    #     base_url=f"http://{OLLAMA_IP}:11434",
     #     temperature=0.1,
     #     num_predict=800,
     # )

@@ -31,9 +31,6 @@ for key in [
 ]:
     os.environ.pop(key, None)
 
-os.environ["NO_PROXY"] = "188.116.172.185,localhost,127.0.0.1"
-os.environ["no_proxy"] = "188.116.172.185,localhost,127.0.0.1"
-
 import json
 from pathlib import Path
 from typing import Any
@@ -54,6 +51,10 @@ from smolagents import Tool, OpenAIModel, CodeAgent
 from dotenv import load_dotenv
 
 load_dotenv()
+
+MY_IP = os.environ["OLLAMA_IP"]
+os.environ["NO_PROXY"] = f"{MY_IP},localhost,127.0.0.1"
+os.environ["no_proxy"] = f"{MY_IP},localhost,127.0.0.1"
 
 # Альтернатива, если используете Hugging Face Inference API:
 # from smolagents import InferenceClientModel
@@ -314,7 +315,7 @@ def build_trainbot_agent(rebuild_index: bool = False) -> CodeAgent:
 
     model = OpenAIModel(
         model_id="qwen2.5:7b",
-        api_base="http://188.116.172.185:11434/v1",
+        api_base=f"http://{MY_IP}:11434/v1",
         api_key="ollama",
         temperature=0.0,
         max_tokens=500,

@@ -1,4 +1,8 @@
 import os
+import requests
+import litellm
+from litellm import completion
+from dotenv import load_dotenv
 
 # Убираем возможные прокси, которые Python/httpx/openai-sdk может подхватывать из окружения
 for key in [
@@ -11,16 +15,15 @@ for key in [
 ]:
     os.environ.pop(key, None)
 
-os.environ["NO_PROXY"] = "188.116.172.185,localhost,127.0.0.1"
-os.environ["no_proxy"] = "188.116.172.185,localhost,127.0.0.1"
-
-import requests
-import litellm
-from litellm import completion
-
 litellm._turn_on_debug()
 
-BASE_URL = "http://188.116.172.185:11434"
+load_dotenv()
+
+MY_IP = os.environ["OLLAMA_IP"]
+os.environ["NO_PROXY"] = f"{MY_IP},localhost,127.0.0.1"
+os.environ["no_proxy"] = f"{MY_IP},localhost,127.0.0.1"
+
+BASE_URL = f"http://{MY_IP}:11434"
 MODEL = "qwen2:7b"
 
 payload = {
